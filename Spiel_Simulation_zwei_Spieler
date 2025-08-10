@@ -6,6 +6,10 @@ Anhand der bereits beschriebenen theoretischen Verteilung können wir nun versuc
 wir eine Vereinfachung vor, wir verwenden in R die Function `sample` und geben einmal die möglichen 43 Würfe, gewichtet nach 
 Ihrer Eintritts Wahrscheinlichkeit. 
 
+#----------------------------------------------------------------------------------
+R_Code:
+#----------------------------------------------------------------------------------
+
 Hierzu haben wir als erstes einen Datensatz programmiert mit allen wichtigen Daten:
 
 ####################################################################################
