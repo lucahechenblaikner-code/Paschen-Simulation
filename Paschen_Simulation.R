@@ -174,8 +174,8 @@ Turnier <- function(starter = "S1", Runden = 1000,
 optimierer <- function(Runden_pro_Strategie = 2000) {
   ergebnisse <- data.frame()
   
-  for (r1 in 1:43) {
-    for (r2 in 1:43) {
+  for (r1 in 1:42) {
+    for (r2 in 1:42) {
       strat_S1 <- c(r1, r2, 100)  # Dritter Wert fest auf 100
       strat_S2 <- c(26, 22, 100)   # Gegnerstrategie fest
       
@@ -199,3 +199,4 @@ optimierer <- function(Runden_pro_Strategie = 2000) {
 
 test <- optimierer(Runden_pro_Strategie = 100)
 print(test$beste_Strategie)
+
