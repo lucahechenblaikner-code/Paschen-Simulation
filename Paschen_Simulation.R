@@ -29,7 +29,7 @@ paschen_df <- data.frame(
     "1-1-1", "2-2-2", "3-3-3", "4-4-4", "5-5-5", "6-6-6",
     "Summe 11", "1-6-5"
   ),
-  Rang = 43:1,
+  Rang = 42:1,
   Kombinationen = c(
     3, 6, 3, 12, 3, 6, 3,
     3, 6, 9, 12, 9, 3,
@@ -199,4 +199,5 @@ optimierer <- function(Runden_pro_Strategie = 2000) {
 
 test <- optimierer(Runden_pro_Strategie = 100)
 print(test$beste_Strategie)
+
 
