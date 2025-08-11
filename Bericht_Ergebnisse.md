@@ -661,3 +661,29 @@ Der zweite Durchlauf wiederholt die Simulation um die Ergebnisse zu validieren.
 |4    |                  1|                  4|                100|                  0.3613184|
 |2    |                  1|                  2|                100|                  0.3593718|
 |1    |                  1|                  1|                100|                  0.3331956|
+
+### Intepreation der Simulation
+In den Tabellen kann man erkennen, dass die Strategien die besonders schlecht performt haben gegen unseren Gegner der c(26,22,100) gespielt hat, extreme Werte waren. 
+Das heißt Sie haben entweder ziemlich alle Würfe stehen lassen, auch wenn er eigentlich schlecht war, oder gar keinen. Die schlechteste Strategie in beiden
+Fällen ist nur den besten Wurf in beiden Fällen stehen zu lassen - mit einer Winrate von rund 34% im 1. Durchlauf und 33% im 2. Durchlauf.
+Besser performt haben jene Strategien die mittlere Werte genommen, meist zwischen 20 und 30.
+
+#### Zur Erläuterung:
+In einem Spiel mit zwei Spielern, wobei ein bestimmter Spieler startet ist die nach Wahrscheinlichkeit beste Strategie,
+denn Wurf 108 bzw. Rang 27 stehen zu lassen, wenn nur einmal gewürfelt werden kann. Warum?
+
+<img width="650" height="450" alt="b223f78e-a0fb-451a-a03c-624a34cd2566" src="https://github.com/user-attachments/assets/03705217-81ec-478a-89ac-d745fef4546b" />
+
+Die Verteilungsfunktion gibt die akkumulierte Wahrscheinlichkeit an, einen besseren oder schlechteren Wurf zu werfen, wenn es nur einen Wurf gibt.
+Für 108 gilt, dass wenn man beim 1. Versuch 108 wirft ist die Wahrscheinlichkeit zu gewinnen ca. 51%. Spielt man dieses Spiel häufig genug und es wird hypothetisch immer
+vom gleichen Spieler begonnen der immer 108 wirft, dann sollte er in 51 % der Fälle gewinnen.
+
+Warum kann nun im 1 und 2 Durchlauf jemand mit einer Strategie von c(21, 23, 100) und c(21, 22, 100) gewinnen. Dieser Spieler nimmt einfach mehr Risiko beim ersten Wurf,
+als unser Gegenspieler. Bedenkt man, dass der Spieler ganz viele verschiedene Strategien die ungefähr gleich sind gespielt hat und damit auch unter eine Winrate von 50 % gekommen ist,
+kann man das als Zufallsgewinn erklären. Um gegen einen Spieler der sicher spielt - ohne viel Risiko gewinnen zu können, macht es Sinn etwas riskanter zu spielen um eine Chance
+auf den Gewinn zu haben. 
+
+
+
+
+
