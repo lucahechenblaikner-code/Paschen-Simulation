@@ -1,4 +1,4 @@
-# Visualisierungen
+# Paschen Simulation - Bericht
 Der folgende Abschnitt enthält Visualsierungen und Ergebnisse bezüglich der Simulationen. Als erstes wird die
 theorethische Verteilung präsentiert. Anschließend Ergebnisse von verschiedenen Simulationen.
 
@@ -59,10 +59,184 @@ Gemäß dieser Berechnung ist der am häufigsten vorkommende Wurf die Würfelsum
 Weiters häufige Würfe sind 10, 107 und 67.
 Am seltensten werden Päsche geworfen, da es dafür nur 1 mögliche Kombination gibt. 
 
-### Simulation zwei Spieler Paschen - 1.Phase
+## Simulation zwei Spieler Paschen - 1.Phase
 Die folgenden Ergebnisse kommen aus einer Simulation, wie in Paschen_Simulation - mit der Funktion optimiere und zeigt die 
 beste Strategie von S1 gegeben der Strategie S2 von c(26,22,x)
 
+## Code für die Simulation:
+
+```{r}
+################################################################################
+# 2. Funktion für Strategie pro Wurf
+################################################################################
+
+# der Input max_Wurf gibt die maximal mögliche Anzahl an Würfen an, die durch
+# eine for Schleife umgesetzt ist
+# Strategie gibt die Grenze an ob ein Wurf stehen gelassen wird oder nicht
+
+Wurf <- function(max_Wurf = 3, Ränge = c(27, 20, 5)) {
+  
+  momentaner_Wurf <- 0
+  
+  for (i in 1:max_Wurf) {
+    
+    momentaner_Wurf <- momentaner_Wurf + 1
+    Wurf <- sample(paschen_df$Wurf, 1, prob = paschen_df$Wahrscheinlichkeit)
+    names(Wurf) <- momentaner_Wurf
+    q <- Ränge[i]
+    
+    if (paschen_df$Rang[paschen_df$Wurf == Wurf] <= q) {
+      return(Wurf)
+      
+    }
+  }
+  return(Wurf)
+}
+
+################################################################################
+# 3. Spielrunden Funktion für zwei Spieler
+################################################################################
+
+
+# Defenieren der Strategien der Spieler, wobei für den dritten Wurf die Strategie
+# egal ist
+strat_S1 <- c(21, 23, 100)
+strat_S2 <- c(26, 23, 100)
+
+# Die folgende Fuktion stellt den Ablauf des Spiels dar, aber nur die 1. Phase,
+# dass sogenannte Deckel aufnehmen
+
+# Wie man in der Funktion sehen kann ist die Anzahl der Würfe des zweiten Spielers
+# durch die Anzahl der Würfe von Spieler 1 restriktiert. 
+# Es gibt drei Möglichkeiten:
+# - Draw: Unentschieden und der letzte Spieler fängt wieder an
+# - S1 gewinnt: bei besseren Wurf = niedriger Rang des Wurfes
+# - S2 gewinnt: bei besseren Wurf = niedriger Rang des Wurfes
+# Alle Informationen werdne je nach Fall dann in einer Liste gespeichert um
+# spätere Funktionen zu erleichtern.
+# Es beginnt immer wieder der Verlierer der vorherigen Runde
+
+Spielrunden <- function(starter = "S1",
+                         Strategie_S1 = strat_S1,
+                         Strategie_S2 = strat_S2) {
+  
+  if (starter == "S1") {
+    Wurf_S1 <- Wurf(max_Wurf = 3, Ränge = Strategie_S1)
+    Wurf_S2 <- Wurf(max_Wurf = as.integer(names(Wurf_S1)), Ränge = Strategie_S2)
+    if (paschen_df$Rang[paschen_df$Wurf == Wurf_S1] < paschen_df$Rang[paschen_df$Wurf == Wurf_S2]) {
+      return(list(next_starter = "S2", winner = "S1", last_player = "S2"))
+    } else if (paschen_df$Rang[paschen_df$Wurf == Wurf_S1] > paschen_df$Rang[paschen_df$Wurf == Wurf_S2]) {
+      return(list(next_starter = "S1", winner = "S2", last_player = "S2"))
+    } else {
+      return(list(next_starter = "Draw", winner = "Draw", last_player = "S2"))
+    }
+  } else {
+    Wurf_S2 <- Wurf(max_Wurf = 3, Ränge = Strategie_S2)
+    Wurf_S1 <- Wurf(max_Wurf = as.integer(names(Wurf_S2)), Ränge = Strategie_S1)
+    if (paschen_df$Rang[paschen_df$Wurf == Wurf_S2] < paschen_df$Rang[paschen_df$Wurf == Wurf_S1]) {
+      return(list(next_starter = "S1", winner = "S2", last_player = "S1"))
+    } else if (paschen_df$Rang[paschen_df$Wurf == Wurf_S2] > paschen_df$Rang[paschen_df$Wurf == Wurf_S1]) {
+      return(list(next_starter = "S2", winner = "S1", last_player = "S1"))
+    } else {
+      return(list(next_starter = "Draw", winner = "Draw", last_player = "S1"))
+    }
+  }
+}
+
+################################################################################
+# 4. Turnier Simulation, jetzt lassen wir die Spieler gegeinander antreten
+################################################################################
+
+Turnier <- function(starter = "S1", Runden = 1000,
+                     Strategie_S1 = strat_S1,
+                     Strategie_S2 = strat_S2) {
+  
+  Siege_S1 <- 0
+  Siege_S2 <- 0
+  Draws <- 0
+  
+  for (i in 1:Runden) {
+    
+    ergebnis <- Spielrunden(starter, Strategie_S1, Strategie_S2)
+    
+    if (ergebnis$winner == "S1") {
+      
+      Siege_S1 <- Siege_S1 + 1
+      starter <- ergebnis$next_starter
+      
+    } else if (ergebnis$winner == "S2") {
+      
+      Siege_S2 <- Siege_S2 + 1
+      starter <- ergebnis$next_starter
+      
+    } else { # Draw
+      
+      Draws <- Draws + 1
+      starter <- ergebnis$last_player
+      
+    }
+  }
+  
+  return(list(Siege_S1 = Siege_S1,
+              Siege_S2 = Siege_S2,
+              Draws = Draws,
+              Winrate_S1 = Siege_S1 / (Runden - Draws)))
+}
+
+
+################################################################################
+# 5. Beste Strategie, gegeben einer Strategie des Gegners
+################################################################################
+
+optimierer <- function(Runden_pro_Strategie = 2000) {
+  ergebnisse <- data.frame()
+  
+  for (r1 in 1:42) {
+    for (r2 in 1:42) {
+      strat_S1 <- c(r1, r2, 100)  # Dritter Wert fest auf 100
+      strat_S2 <- c(26, 22, 100)   # Gegnerstrategie fest
+      
+      res <- Turnier(Runden = Runden_pro_Strategie,
+                      Strategie_S1 = strat_S1,
+                      Strategie_S2 = strat_S2)
+      
+      ergebnisse <- rbind(ergebnisse, data.frame(
+        R1 = r1, R2 = r2, R3 = 100,
+        Siege_S1 = res$Siege_S1,
+        Siege_S2 = res$Siege_S2,
+        Draws = res$Draws,
+        Winrate_S1 = res$Winrate_S1
+      ))
+    }
+  }
+  
+  best <- ergebnisse[which.max(ergebnisse$Winrate_S1), ]
+  return(list(beste_Strategie = best, alle_Ergebnisse = ergebnisse))
+}
+
+test <- optimierer(Runden_pro_Strategie = 5000)
+print(test$beste_Strategie)
+
+test <- as.data.frame(test)
+
+ord_simulation <- test[order(test$alle_Ergebnisse.Winrate_S1, decreasing = TRUE), ]
+
+df <- ord_simulation[ , c("alle_Ergebnisse.R1", "alle_Ergebnisse.R2", "alle_Ergebnisse.R3",
+                     "alle_Ergebnisse.Winrate_S1")]
+
+head(df, n = 100)
+
+
+# Ausgabe für Github
+library(knitr)
+
+kable(head(df, n = 100), format = "markdown")
+kable(tail(df, n = 100), format = "markdown")
+
+```
+
+
+## 1 . Durchlauf
 #### Ergebnisse (100 beste Strategien nach Winrate - 5000 Simulationen per Strategie)
 
 |     | alle_Ergebnisse.R1| alle_Ergebnisse.R2| alle_Ergebnisse.R3| alle_Ergebnisse.Winrate_S1|
@@ -275,4 +449,215 @@ beste Strategie von S1 gegeben der Strategie S2 von c(26,22,x)
 |1    |                  1|                  1|                100|                  0.3364968|
 
 
+## 2. Durchlauf
+Der zweite Durchlauf wiederholt die Simulation um die Ergebnisse zu validieren.
 
+#### Ergebnisse (100 beste Strategien nach Winrate - 5000 Simulationen per Strategie)
+
+|     | alle_Ergebnisse.R1| alle_Ergebnisse.R2| alle_Ergebnisse.R3| alle_Ergebnisse.Winrate_S1|
+|:----|------------------:|------------------:|------------------:|--------------------------:|
+|862  |                 21|                 22|                100|                  0.5124974|
+|1029 |                 25|                 21|                100|                  0.5113543|
+|993  |                 24|                 27|                100|                  0.5102125|
+|1076 |                 26|                 26|                100|                  0.5096055|
+|1037 |                 25|                 29|                100|                  0.5094028|
+|904  |                 22|                 22|                100|                  0.5092113|
+|994  |                 24|                 28|                100|                  0.5086225|
+|951  |                 23|                 27|                100|                  0.5084711|
+|864  |                 21|                 24|                100|                  0.5081662|
+|867  |                 21|                 27|                100|                  0.5069143|
+|1117 |                 27|                 25|                100|                  0.5063082|
+|858  |                 21|                 18|                100|                  0.5062189|
+|1111 |                 27|                 19|                100|                  0.5061191|
+|1071 |                 26|                 21|                100|                  0.5060041|
+|1026 |                 25|                 18|                100|                  0.5055924|
+|995  |                 24|                 29|                100|                  0.5053520|
+|1079 |                 26|                 29|                100|                  0.5049917|
+|1157 |                 28|                 23|                100|                  0.5049566|
+|1078 |                 26|                 28|                100|                  0.5046574|
+|863  |                 21|                 23|                100|                  0.5046555|
+|947  |                 23|                 23|                100|                  0.5044339|
+|820  |                 20|                 22|                100|                  0.5044266|
+|989  |                 24|                 23|                100|                  0.5043317|
+|1109 |                 27|                 17|                100|                  0.5042399|
+|1075 |                 26|                 25|                100|                  0.5041237|
+|1207 |                 29|                 31|                100|                  0.5040298|
+|819  |                 20|                 21|                100|                  0.5040148|
+|913  |                 22|                 31|                100|                  0.5039240|
+|949  |                 23|                 25|                100|                  0.5037375|
+|987  |                 24|                 21|                100|                  0.5036345|
+|784  |                 19|                 28|                100|                  0.5036224|
+|905  |                 22|                 23|                100|                  0.5036105|
+|900  |                 22|                 18|                100|                  0.5035138|
+|821  |                 20|                 23|                100|                  0.5031926|
+|1036 |                 25|                 28|                100|                  0.5031017|
+|1040 |                 25|                 32|                100|                  0.5030139|
+|778  |                 19|                 22|                100|                  0.5028854|
+|859  |                 21|                 19|                100|                  0.5027979|
+|871  |                 21|                 31|                100|                  0.5026915|
+|1067 |                 26|                 17|                100|                  0.5024845|
+|988  |                 24|                 22|                100|                  0.5022737|
+|1232 |                 30|                 14|                100|                  0.5021753|
+|813  |                 20|                 15|                100|                  0.5018672|
+|990  |                 24|                 24|                100|                  0.5015486|
+|948  |                 23|                 24|                100|                  0.5015429|
+|811  |                 20|                 13|                100|                  0.5012381|
+|1110 |                 27|                 18|                100|                  0.5009303|
+|1331 |                 32|                 29|                100|                  0.5009303|
+|1019 |                 25|                 11|                100|                  0.5007254|
+|1118 |                 27|                 26|                100|                  0.5007221|
+|815  |                 20|                 17|                100|                  0.5006214|
+|614  |                 15|                 26|                100|                  0.5006211|
+|1065 |                 26|                 15|                100|                  0.5006203|
+|1038 |                 25|                 30|                100|                  0.5002070|
+|903  |                 22|                 21|                100|                  0.5001033|
+|945  |                 23|                 21|                100|                  0.5000000|
+|1066 |                 26|                 16|                100|                  0.5000000|
+|1199 |                 29|                 23|                100|                  0.5000000|
+|1286 |                 31|                 26|                100|                  0.5000000|
+|1031 |                 25|                 23|                100|                  0.4997930|
+|1114 |                 27|                 22|                100|                  0.4997928|
+|1240 |                 30|                 22|                100|                  0.4996895|
+|783  |                 19|                 27|                100|                  0.4995875|
+|739  |                 18|                 25|                100|                  0.4995868|
+|1032 |                 25|                 24|                100|                  0.4994844|
+|1034 |                 25|                 26|                100|                  0.4994836|
+|1290 |                 31|                 30|                100|                  0.4993814|
+|1245 |                 30|                 27|                100|                  0.4993784|
+|1125 |                 27|                 33|                100|                  0.4992797|
+|908  |                 22|                 26|                100|                  0.4992737|
+|912  |                 22|                 30|                100|                  0.4992731|
+|940  |                 23|                 16|                100|                  0.4991739|
+|1161 |                 28|                 27|                100|                  0.4991715|
+|1000 |                 24|                 34|                100|                  0.4989686|
+|695  |                 17|                 23|                100|                  0.4989618|
+|984  |                 24|                 18|                100|                  0.4988643|
+|1077 |                 26|                 27|                100|                  0.4988639|
+|997  |                 24|                 31|                100|                  0.4987634|
+|1195 |                 29|                 19|                100|                  0.4987572|
+|1190 |                 29|                 14|                100|                  0.4986562|
+|1073 |                 26|                 23|                100|                  0.4986545|
+|991  |                 24|                 25|                100|                  0.4985579|
+|822  |                 20|                 24|                100|                  0.4985537|
+|825  |                 20|                 27|                100|                  0.4985537|
+|1158 |                 28|                 24|                100|                  0.4985507|
+|911  |                 22|                 29|                100|                  0.4984450|
+|772  |                 19|                 16|                100|                  0.4983478|
+|826  |                 20|                 28|                100|                  0.4983430|
+|1070 |                 26|                 20|                100|                  0.4982521|
+|950  |                 23|                 26|                100|                  0.4981397|
+|1167 |                 28|                 33|                100|                  0.4980457|
+|827  |                 20|                 29|                100|                  0.4980352|
+|1237 |                 30|                 19|                100|                  0.4980352|
+|780  |                 19|                 24|                100|                  0.4980335|
+|1238 |                 30|                 20|                100|                  0.4979330|
+|1122 |                 27|                 30|                100|                  0.4978328|
+|571  |                 14|                 25|                100|                  0.4978274|
+|1041 |                 25|                 33|                100|                  0.4976352|
+|1280 |                 31|                 20|                100|                  0.4976235|
+|953  |                 23|                 29|                100|                  0.4975176|
+
+#### Hier die 100 schlechtesten Strategien (5000 Simulationen per Strategie): 
+
+|     | alle_Ergebnisse.R1| alle_Ergebnisse.R2| alle_Ergebnisse.R3| alle_Ergebnisse.Winrate_S1|
+|:----|------------------:|------------------:|------------------:|--------------------------:|
+|172  |                  5|                  4|                100|                  0.4098361|
+|1759 |                 42|                 37|                100|                  0.4095023|
+|293  |                  7|                 41|                100|                  0.4093071|
+|217  |                  6|                  7|                100|                  0.4090438|
+|301  |                  8|                  7|                100|                  0.4089967|
+|1761 |                 42|                 39|                100|                  0.4089027|
+|49   |                  2|                  7|                100|                  0.4088375|
+|15   |                  1|                 15|                100|                  0.4087531|
+|164  |                  4|                 38|                100|                  0.4086848|
+|123  |                  3|                 39|                100|                  0.4084507|
+|174  |                  5|                  6|                100|                  0.4081294|
+|50   |                  2|                  8|                100|                  0.4068394|
+|378  |                  9|                 42|                100|                  0.4060166|
+|298  |                  8|                  4|                100|                  0.4057971|
+|208  |                  5|                 40|                100|                  0.4057760|
+|51   |                  2|                  9|                100|                  0.4057309|
+|1729 |                 42|                  7|                100|                  0.4053328|
+|254  |                  7|                  2|                100|                  0.4048414|
+|90   |                  3|                  6|                100|                  0.4041761|
+|252  |                  6|                 42|                100|                  0.4038581|
+|88   |                  3|                  4|                100|                  0.4036906|
+|92   |                  3|                  8|                100|                  0.4031957|
+|300  |                  8|                  6|                100|                  0.4031858|
+|421  |                 11|                  1|                100|                  0.4029387|
+|46   |                  2|                  4|                100|                  0.4028702|
+|251  |                  6|                 41|                100|                  0.4027807|
+|302  |                  8|                  8|                100|                  0.4024036|
+|379  |                 10|                  1|                100|                  0.4023987|
+|33   |                  1|                 33|                100|                  0.4023681|
+|296  |                  8|                  2|                100|                  0.4017359|
+|34   |                  1|                 34|                100|                  0.4017341|
+|91   |                  3|                  7|                100|                  0.4014978|
+|133  |                  4|                  7|                100|                  0.4013295|
+|213  |                  6|                  3|                100|                  0.4011194|
+|47   |                  2|                  5|                100|                  0.4009150|
+|166  |                  4|                 40|                100|                  0.4009140|
+|173  |                  5|                  5|                100|                  0.4007077|
+|297  |                  8|                  3|                100|                  0.4005818|
+|81   |                  2|                 39|                100|                  0.4004141|
+|218  |                  6|                  8|                100|                  0.4002073|
+|176  |                  5|                  8|                100|                  0.4001654|
+|215  |                  6|                  5|                100|                  0.3997522|
+|89   |                  3|                  5|                100|                  0.3992111|
+|209  |                  5|                 41|                100|                  0.3992111|
+|129  |                  4|                  3|                100|                  0.3991718|
+|13   |                  1|                 13|                100|                  0.3989648|
+|84   |                  2|                 42|                100|                  0.3987118|
+|45   |                  2|                  3|                100|                  0.3986738|
+|171  |                  5|                  3|                100|                  0.3985869|
+|259  |                  7|                  7|                100|                  0.3982666|
+|257  |                  7|                  5|                100|                  0.3978895|
+|338  |                  9|                  2|                100|                  0.3978785|
+|125  |                  3|                 41|                100|                  0.3976003|
+|294  |                  7|                 42|                100|                  0.3973988|
+|87   |                  3|                  3|                100|                  0.3964978|
+|128  |                  4|                  2|                100|                  0.3964077|
+|126  |                  3|                 42|                100|                  0.3963554|
+|86   |                  3|                  2|                100|                  0.3962146|
+|212  |                  6|                  2|                100|                  0.3957773|
+|11   |                  1|                 11|                100|                  0.3953102|
+|36   |                  1|                 36|                100|                  0.3947532|
+|124  |                  3|                 40|                100|                  0.3943720|
+|256  |                  7|                  4|                100|                  0.3941651|
+|82   |                  2|                 40|                100|                  0.3940713|
+|167  |                  4|                 41|                100|                  0.3939206|
+|299  |                  8|                  5|                100|                  0.3938513|
+|130  |                  4|                  4|                100|                  0.3935444|
+|9    |                  1|                  9|                100|                  0.3925680|
+|210  |                  5|                 42|                100|                  0.3925098|
+|48   |                  2|                  6|                100|                  0.3923525|
+|337  |                  9|                  1|                100|                  0.3920231|
+|260  |                  7|                  8|                100|                  0.3898551|
+|170  |                  5|                  2|                100|                  0.3897989|
+|132  |                  4|                  6|                100|                  0.3893732|
+|253  |                  7|                  1|                100|                  0.3893383|
+|35   |                  1|                 35|                100|                  0.3893162|
+|336  |                  8|                 42|                100|                  0.3875648|
+|44   |                  2|                  2|                100|                  0.3868961|
+|255  |                  7|                  3|                100|                  0.3861839|
+|38   |                  1|                 38|                100|                  0.3832472|
+|10   |                  1|                 10|                100|                  0.3814646|
+|8    |                  1|                  8|                100|                  0.3800746|
+|127  |                  4|                  1|                100|                  0.3774247|
+|37   |                  1|                 37|                100|                  0.3762131|
+|295  |                  8|                  1|                100|                  0.3760595|
+|39   |                  1|                 39|                100|                  0.3727310|
+|85   |                  3|                  1|                100|                  0.3721362|
+|6    |                  1|                  6|                100|                  0.3719298|
+|7    |                  1|                  7|                100|                  0.3716174|
+|169  |                  5|                  1|                100|                  0.3714876|
+|40   |                  1|                 40|                100|                  0.3705311|
+|42   |                  1|                 42|                100|                  0.3700041|
+|3    |                  1|                  3|                100|                  0.3687708|
+|41   |                  1|                 41|                100|                  0.3669612|
+|211  |                  6|                  1|                100|                  0.3667081|
+|5    |                  1|                  5|                100|                  0.3653647|
+|43   |                  2|                  1|                100|                  0.3635423|
+|4    |                  1|                  4|                100|                  0.3613184|
+|2    |                  1|                  2|                100|                  0.3593718|
+|1    |                  1|                  1|                100|                  0.3331956|
