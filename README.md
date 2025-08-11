@@ -33,7 +33,7 @@ Von der Bewertung gilt normale Würfe < Reihe < Pasch < Würfelsumme 11 < 1,6,5 
 Hier eine Auflistung aller möglichen Würfelsummen nach Bewertung
 ### Normale Zahlen
  7, 8, 9, 10, 12, 13, 14, 64, 65, 66, 67, 68, 70, 104, 106, 107, 108,
- 109, 110, 122, 123, 124, 125, 162, 163, 164, 202, 203, 204, 205, 260
+ 109, 110, 122, 123, 124, 125, 162, 163, 164, 202, 203, 204, 205, 220, 260
 
 ### Reihen
  1.2.3, 2.3.4, 3.4.5, 4.5.6
@@ -81,6 +81,7 @@ Anzahl = 6³ = 216
 | 203    | 3             |
 | 204    | 3             |
 | 205    | 3             |
+| 220    | 3             |
 | 260    | 3             |
 | 1.2.3  | 6             |
 | 2.3.4  | 6             |
